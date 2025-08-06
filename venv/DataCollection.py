@@ -28,67 +28,68 @@ class DataCollector:
 
 		print("Camera succesfully initialized.\n")
 
-	def main(self):#main ne marche ps 
-		self.init_camera()
-		_, self.frame = self.cap.read()
-
-		
-		key = cv2.waitKey(1) & 0xFF
-
-
-		print("Press 'ESC' to abort early.")
-
-		while self.cap.isOpened():
-			cv2.imshow("Camera Feed", cv2.flip(self.frame, 1))
-
-			if key == 27:
-				print("Aborted by user")
-				self.cap.release()
-				return
-			
-			if key == ord('f'):
-				self.take_pictures_series()
-		
-		self.cap.release()
-
+	def cleanup(self):
+		"""Release camera and close windows"""
+		if self.cap:
+			self.cap.release()
+		cv2.destroyAllWindows()
+		print("Camera released and windows closed.")
 
 	def take_pictures_series(self):
+			print("Press 'q' to go to the next pose")
+			print("Press 'Esc' to quit")
+			
+			self.init_camera()
 
 			fps = self.cap.get(cv2.CAP_PROP_FPS)
 			frame_counter = 0
 			picture_counter = 0
 
 			while picture_counter < self.total_pictures:
-				# ret, frame = self.cap.read()
-				# if not ret:
-				# 	continue
+				ret, frame = self.cap.read()
+				if not ret:
+					continue
 
 				frame_counter += 1
+				timer = frame_counter % (fps * self.break_time)
+				flipped = cv2.flip(frame, 1)
 
-				# flipped = cv2.flip(frame, 1)
-				# cv2.imshow("Camera Feed", flipped)
-				# key = cv2.waitKey(1) & 0xFF
+				cv2.putText(flipped, f"Pose: {self.pose_name} - Picture: {picture_counter}/{self.total_pictures}]", (50, 50), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 200, 100), 2)
+				cv2.putText(flipped, f"Time: {int(timer/fps)+1}/{self.break_time}sec", (50, 100), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 100, 200), 2)
+				
+				cv2.imshow("Camera Feed", flipped)
+				key = cv2.waitKey(1) & 0xFF
 
-				# if key == 27:
-				# 	print("Aborted by user.")
-				# 	break
+				if key == ord('q'):
+					print("Aborted by user.")
+					break
 
-				if frame_counter % (fps * self.break_time) == 0:
+				if key == 27:
+					print("Exiting...")
+					exit()
+
+				if timer == 0:
 					filename = f"photo_{self.pose_name}_{picture_counter + 1}.bmp"
 					filepath = os.path.join(self.output_dir, filename)
-					cv2.imwrite(filepath, self.frame)
+					cv2.imwrite(filepath, frame)
 					print(f"Saved {filepath}")
 					picture_counter += 1
+
+			print("Pictures series completed")
+			self.cleanup()
+
+               
 	
+
+
 poses = ["Hello", "Thank you", "I love you"]
 for pose in poses:
-    name_dir = pose.replace(" ", "_").lower()
-    output_dir = f"./data/{name_dir}/"
-    
+	name_dir = pose.replace(" ", "_").lower()
+	output_dir = f"./data/{name_dir}/"
+
     # Make the directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
+	os.makedirs(output_dir, exist_ok=True)
 
     # Create the DataCollector instance and capture
-    data = DataCollector(pose, output_dir, total_pictures=3, break_time_sec=1)
-    data.main()
-
+	data = DataCollector(pose, output_dir)
+	data.take_pictures_series()

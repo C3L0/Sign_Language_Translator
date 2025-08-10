@@ -2,9 +2,9 @@ import cv2
 import time
 import os
 
-
+#data folder should be clean
 class DataCollector:
-	def __init__(self, pose_name: str, output_dir, total_pictures = 10, break_time_sec = 5, camera_id = 0):
+	def __init__(self, pose_name: str, output_dir, total_pictures = 10, break_time_sec = 3, camera_id = 0):
 		self.pose_name = pose_name
 		self.output_dir = output_dir
 		self.total_pictures = total_pictures
@@ -69,7 +69,7 @@ class DataCollector:
 					exit()
 
 				if timer == 0:
-					filename = f"photo_{self.pose_name}_{picture_counter + 1}.bmp"
+					filename = f"photo_{self.pose_name.lower().replace(' ', '_')}_{picture_counter + 1}.bmp"
 					filepath = os.path.join(self.output_dir, filename)
 					cv2.imwrite(filepath, frame)
 					print(f"Saved {filepath}")
@@ -83,6 +83,7 @@ class DataCollector:
 
 
 poses = ["Hello", "Thank you", "I love you"]
+#poses = ["Hello"]
 for pose in poses:
 	name_dir = pose.replace(" ", "_").lower()
 	output_dir = f"./data/{name_dir}/"

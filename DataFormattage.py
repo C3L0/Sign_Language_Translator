@@ -1,6 +1,11 @@
 import re
+import pathlib
+import glob
+import pandas as pd
+import itertools
+from typing import List
 
-# The ordered names of Mediapipe landmarks
+class  
 LANDMARK_NAMES = [
     "wrist",
     "thumb_cmc",
@@ -25,58 +30,71 @@ LANDMARK_NAMES = [
     "pinky_tip",
 ]
 
-# def parse_hand_landmarks_simple(txt_path: str):
-#     with open(txt_path, "r") as f:
-#         lines = f.readlines()
-#
-#     coords = []
-#     x = y = z = None
-#
-#     for line in lines:
-#         line = line.strip()
-#         if line.startswith("x:"):
-#             x = float(line.split(":")[1].strip())
-#         elif line.startswith("y:"):
-#             y = float(line.split(":")[1].strip())
-#         elif line.startswith("z:"):
-#             z = float(line.split(":")[1].strip())
-#             # we complete one landmark here
-#             coords.append((x, y, z))
-#
-#     if len(coords) != 21:
-#         raise ValueError(f"Expected 21 landmarks, got {len(coords)}")
-#
-#     # Map to names
-#     hand_positions = {}
-#     for name, (x, y, z) in zip(LANDMARK_NAMES, coords):
-#         hand_positions[name] = {"x": x, "y": y, "z": z}
-#
-#     return hand_positions
-
 
 def parse_hand_landmarks(txt_path: str):
     with open(txt_path, "r") as f:
         content = f.read()
 
-    # Find all x/y/z floats in the file
+    # Handedness
+    handedness_match = re.search(r'label:\s*"(\w+)"', content)
+    handedness = handedness_match.group(1) if handedness_match else None
+
+    # Landmarks
     coords = re.findall(
-        r"""x:\s*(\d*\.?\d+(?:[eE][-+]?\d+)?)\s*
-            y:\s*(\d*\.?\d+(?:[eE][-+]?\d+)?)\s*
-            z:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)""",  # Imight need more research
+        r"x:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*"
+        r"y:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*"
+        r"z:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)",
         content,
+        flags=re.DOTALL,
     )
 
-    if len(coords) != 21:
-        raise ValueError(f"Expected 21 landmarks, got {len(coords)}")
+    # if len(coords) != 21: # len(coords) % 21 == 0 # can be 21 for 1 hand or 42 for 2 hands
+    #     print(f"Expected 21 landmarks, found {len(coords)}")
+    # maybe return an empty df
 
-    # Build dictionary
-    hand_positions = {}
-    for name, (x, y, z) in zip(LANDMARK_NAMES, coords):
-        hand_positions[name] = {"x": float(x), "y": float(y), "z": float(z)}
+    df = pd.DataFrame(coords, columns=["x", "y", "z"], dtype=float)
+    repeated_landmarks = list(
+        itertools.islice(itertools.cycle(LANDMARK_NAMES), len(df))
+    )
+    df.insert(0, "landmark", repeated_landmarks)
+    df["handedness"] = (
+        handedness  # might need to be change if  landmark >21 bc it means that it's the other hand
+    )
 
-    return hand_positions
+    return df
 
 
-hand_positions = parse_hand_landmarks("data/hello/photo_hello_5.txt")
+def load_pose_from_files(file_name: List[str]):
+    # ./data/{pose}/photo_{pose}_num.txt
+    pose = re.findall(r"\./data/(\w+)/", file_name)
 
-print(hand_positions["index_finger_tip"])
+    return pose[0]
+
+
+def all_metadata(pose: str):
+    path = pose + "/*.txt"
+    all_files = glob.glob(path, recursive=True)
+
+    keys = [load_pose_from_files(f) for f in all_files]
+
+    df_all = pd.concat(
+        [parse_hand_landmarks(f) for f in all_files],
+        keys=keys,
+        names=["pose", "row"],
+    ).reset_index(level=0)
+    return df_all
+
+
+df = all_metadata("./data/*")
+print(df.head(15))
+print(df.tail(15))
+print(df.shape)
+# def globalize_data(path: str = "/data/*"):
+#     # get all pose name
+#     path =
+#     # collect the entire dataframes
+#     # add the Y: pose in the dataframes
+#     # return a complete dataset
+#
+# def get_dataset(path: str = "/data/*"):
+#     return globalize_data(path)

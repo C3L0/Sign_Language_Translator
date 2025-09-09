@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import List, Dict
 
 # The code seems good but it has a warning, maybe I should add a hand detector too? idk
+# put the code in a class
+# remove the warning and either add a load bar or at least inform when it's done
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -86,3 +88,5 @@ with mp_hands.Hands(
                 f.write("Index finger tip coordinates:\n")
                 f.write(f"X: {tip_x}\n")
                 f.write(f"Y: {tip_y}\n")
+
+print("Data prepared, metadata loaded\nExiting...")

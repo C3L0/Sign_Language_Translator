@@ -9,7 +9,7 @@ class DataCollector:
         self,
         pose_name: str,
         output_dir,
-        total_pictures=10,
+        total_pictures=15,
         break_time_sec=3,
         camera_id=0,
     ):
@@ -103,8 +103,7 @@ class DataCollector:
         self.cleanup()
 
 
-poses = ["Hello", "Thank you", "I love you"]
-# poses = ["Hello"]
+poses = ["Hello", "Thank you", "I love you", "Yes", "No", "Please", "Albania"]
 for pose in poses:
     name_dir = pose.replace(" ", "_").lower()
     output_dir = f"./data/{name_dir}/"

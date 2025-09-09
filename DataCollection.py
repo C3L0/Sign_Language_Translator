@@ -4,6 +4,7 @@ import os
 
 
 # data folder should be clean
+# class should be commented
 class DataCollector:
     def __init__(
         self,

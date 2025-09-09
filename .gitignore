@@ -9,4 +9,6 @@ wheels/
 # Virtual environments
 .venv
 
-/bin/bash: line 1: q: command not found
+# /bin/bash: line 1: q: command not found
+
+./data/*

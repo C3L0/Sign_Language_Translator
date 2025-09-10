@@ -3,16 +3,19 @@ import mediapipe as mp
 import os
 from pathlib import Path
 from typing import List, Dict
+import warnings
 
-# The code seems good but it has a warning, maybe I should add a hand detector too? idk
+# NEED TO BE READ : https://www.geeksforgeeks.org/python/how-to-disable-python-warnings/
+warnings.filterwarnings("ignore")  # Suppress all warnings
+
+# miss the comment in the class
+
 # put the code in a class
-# remove the warning and either add a load bar or at least inform when it's done
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
-# DATA_DICTIONARY = {}  data_file, metadata_file
 path = Path("./data/")
 types = ["*.txt"]
 
@@ -69,7 +72,6 @@ with mp_hands.Hands(
         results = hands.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
         with open(metadata_file, "w") as f:
-            # print('Handedness:', results.multi_handedness)
             f.write(f"Handedness: {results.multi_handedness}\n")
             if not results.multi_hand_landmarks:
                 continue
@@ -89,4 +91,4 @@ with mp_hands.Hands(
                 f.write(f"X: {tip_x}\n")
                 f.write(f"Y: {tip_y}\n")
 
-print("Data prepared, metadata loaded\nExiting...")
+print("Data prepared, metadata loaded\nExiting...")  # maybe put a progression bar

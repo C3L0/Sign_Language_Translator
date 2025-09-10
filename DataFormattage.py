@@ -54,14 +54,23 @@ class DataFormattage:
             flags=re.DOTALL,
         )
 
+        # DataFrame
         df = pd.DataFrame(coords, columns=["x", "y", "z"], dtype=float)
+
+        if df.shape[0] == 21:
+            dummy = pd.DataFrame([[-1.0, -1.0, -1.0]] * 21, columns=["x", "y", "z"])
+            df = pd.concat([df, dummy], ignore_index=True)
+
         repeated_landmarks = list(
             itertools.islice(itertools.cycle(self.LANDMARK_NAMES), len(df))
         )
         df.insert(0, "landmark", repeated_landmarks)
-        df["handedness"] = (
-            handedness  # might need to be change if  landmark >21 bc it means that it's the other hand
+
+        handedness_list = [handedness] * 21 + (
+            ["Left" if handedness == "Right" else "Right"] * 21 if len(df) == 42 else []
         )
+
+        df["handedness"] = handedness_list
 
         return df
 
@@ -85,9 +94,5 @@ class DataFormattage:
         return df_all
 
 
-formattage = DataFormattage()
-df = formattage.all_metadata()
-
-print(df.head(15))
-print(df.tail(15))
-print(df.shape)
+# formattage = DataFormattage()
+# df = formattage.all_metadata()

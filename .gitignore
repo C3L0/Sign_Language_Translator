@@ -11,4 +11,7 @@ wheels/
 
 # /bin/bash: line 1: q: command not found
 
-./data/*
+
+data/*
+!data/.gitkeep
+

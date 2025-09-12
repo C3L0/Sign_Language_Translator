@@ -2,6 +2,7 @@ import re
 import pathlib
 import glob
 import pandas as pd
+import numpy as np
 import itertools
 from typing import List
 
@@ -9,10 +10,12 @@ from typing import List
 # class should be commented
 class DataFormattage:
     def __init__(
-        self, path: str = "./data"
+        self, poses: List[str], path: str = "./data"
     ):  # maybe type path to Path type instead of str type
         self.path = path
+        self.poses = poses
 
+        self.encode_poses = {pose[1]: pose[0] for pose in enumerate(self.poses)}
         self.LANDMARK_NAMES = [
             "wrist",
             "thumb_cmc",
@@ -66,18 +69,34 @@ class DataFormattage:
         )
         df.insert(0, "landmark", repeated_landmarks)
 
-        handedness_list = [handedness] * 21 + (
-            ["Left" if handedness == "Right" else "Right"] * 21 if len(df) == 42 else []
-        )
+        # handedness_list = [handedness] * 21 + (
+        #     ["Left" if handedness == "Right" else "Right"] * 21 if len(df) == 42 else []
+        # )
 
-        df["handedness"] = handedness_list
+        # df["handedness"] = handedness_list
+
+        one_hot_map = {"Right": [1, 0], "Left": [0, 1]}
+
+        handedness_list = [one_hot_map[handedness]] * 21
+
+        if len(df) == 42:
+            opposite = "Left" if handedness == "Right" else "Right"
+            handedness_list += [one_hot_map[opposite]] * 21
+
+        # Assign to two new columns
+        handed_array = np.array(handedness_list)
+        df["handedness_right"] = handed_array[:, 0]
+        df["handedness_left"] = handed_array[:, 1]
 
         return df
 
-    def load_pose_from_files(self, file_name: List[str]) -> str:
-        pose = re.findall(r"\./data/(\w+)/", file_name)
+    def load_pose_from_files(self, file_name: str) -> int:
+        pose = re.search(r"\./data/(\w+)/", file_name)
+        if not pose:
+            return -1
+        pose_name = pose.group(1)
 
-        return pose[0]
+        return self.encode_poses.get(pose_name, -1)
 
     def all_metadata(self) -> pd.DataFrame:
         self.path += "/*/*.txt"
@@ -94,5 +113,6 @@ class DataFormattage:
         return df_all
 
 
-# formattage = DataFormattage()
-# df = formattage.all_metadata()
+poses = ["hello", "thank_you", "i_love_you", "yes", "no", "please", "albania"]
+formattage = DataFormattage(poses=poses)
+df = formattage.all_metadata()

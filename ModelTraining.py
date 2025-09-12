@@ -32,8 +32,8 @@ class HandPoseClassifier:
     def StratifiedSplit(
         self, df: pd.DataFrame, test_rate: float = 0.2, y_label: str = "pose"
     ):
-        X = df.drop(columns=[y_label]).values.astype(np.float32)
-        y = df[y_label]
+        X = df.select_dtypes(include=[float, int]).values
+        y = df[y_label].values.astype(np.float32)
 
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_rate, stratify=y, random_state=42

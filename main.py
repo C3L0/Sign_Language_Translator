@@ -7,8 +7,10 @@ import pandas as pd
 def main():
     print("Hello from sign-language-translator!")
 
-    formatter = DataFormattage("./data")
+    poses = ["hello", "thank_you", "i_love_you", "yes", "no", "please", "albania"]
+    formatter = DataFormattage(poses=poses, path="./data")
     df = formatter.all_metadata()
+    print(df.head(-10))
 
     input_dim = df.drop(columns=["pose"]).shape[1]
     hidden_dim = 256
@@ -17,7 +19,7 @@ def main():
         input_dim, hidden_dim, num_classes, data=df, test_rate=0.2, y_label="pose"
     )
 
-    classifier.Train(epochs=50)
+    classifier.Train(epochs=100)
     acc = classifier.Test()
 
     print(f"Test accuracy: {acc}")

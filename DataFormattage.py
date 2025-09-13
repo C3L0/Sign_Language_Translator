@@ -96,7 +96,7 @@ class DataFormattage:
             return -1
         pose_name = pose.group(1)
 
-        return self.encode_poses.get(pose_name, -1)
+        return self.encode_poses.get(pose_name)
 
     def all_metadata(self) -> pd.DataFrame:
         self.path += "/*/*.txt"

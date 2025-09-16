@@ -1,10 +1,11 @@
-import re
-import pathlib
 import glob
-import pandas as pd
-import numpy as np
 import itertools
+import pathlib
+import re
 from typing import List
+
+import numpy as np
+import pandas as pd
 
 
 # class should be commented
@@ -40,6 +41,56 @@ class DataFormattage:
             "pinky_tip",
         ]
 
+    #     def parse_hand_landmarks(self, txt_path: str) -> pd.DataFrame:
+    #         with open(txt_path, "r") as f:
+    #             content = f.read()
+    #
+    #         # Handedness
+    #         handedness_match = re.search(r'label:\s*"(\w+)"', content)
+    #         handedness = handedness_match.group(1) if handedness_match else None
+    #
+    #         # Landmarks
+    #         coords = re.findall(
+    #             r"x:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*"
+    #             r"y:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*"
+    #             r"z:\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)",
+    #             content,
+    #             flags=re.DOTALL,
+    #         )
+    #
+    #         # dataframe
+    #         df = pd.dataframe(coords, columns=["x", "y", "z"], dtype=float)
+    #
+    #         if df.shape[0] == 21:
+    #             dummy = pd.dataframe([[-1.0, -1.0, -1.0]] * 21, columns=["x", "y", "z"])
+    #             df = pd.concat([df, dummy], ignore_index=true)
+    #
+    #         repeated_landmarks = list(
+    #             itertools.islice(itertools.cycle(self.landmark_names), len(df))
+    #         )
+    #         df.insert(0, "landmark", repeated_landmarks)
+    #
+    #         # handedness_list = [handedness] * 21 + (
+    #         #     ["left" if handedness == "right" else "right"] * 21 if len(df) == 42 else []
+    #         # )
+    #
+    #         # df["handedness"] = handedness_list
+    #
+    #         one_hot_map = {"right": [1, 0], "left": [0, 1]}
+    #
+    #         handedness_list = [one_hot_map[handedness]] * 21
+    #
+    #         if len(df) == 42:
+    #             opposite = "left" if handedness == "right" else "right"
+    #             handedness_list += [one_hot_map[opposite]] * 21
+    #
+    #         # assign to two new columns
+    #         handed_array = np.array(handedness_list)
+    #         df["handedness_right"] = handed_array[:, 0]
+    #         df["handedness_left"] = handed_array[:, 1]
+    #
+    #         return df
+
     def parse_hand_landmarks(self, txt_path: str) -> pd.DataFrame:
         with open(txt_path, "r") as f:
             content = f.read()
@@ -57,38 +108,36 @@ class DataFormattage:
             flags=re.DOTALL,
         )
 
-        # DataFrame
         df = pd.DataFrame(coords, columns=["x", "y", "z"], dtype=float)
 
+        # If only 1 hand (21 pts), add dummy 2nd hand (21 dummy pts)
         if df.shape[0] == 21:
             dummy = pd.DataFrame([[-1.0, -1.0, -1.0]] * 21, columns=["x", "y", "z"])
             df = pd.concat([df, dummy], ignore_index=True)
 
+        # Add landmark names (optional)
         repeated_landmarks = list(
             itertools.islice(itertools.cycle(self.LANDMARK_NAMES), len(df))
         )
         df.insert(0, "landmark", repeated_landmarks)
 
-        # handedness_list = [handedness] * 21 + (
-        #     ["Left" if handedness == "Right" else "Right"] * 21 if len(df) == 42 else []
-        # )
-
-        # df["handedness"] = handedness_list
-
+        # One-hot handedness
         one_hot_map = {"Right": [1, 0], "Left": [0, 1]}
-
         handedness_list = [one_hot_map[handedness]] * 21
-
         if len(df) == 42:
             opposite = "Left" if handedness == "Right" else "Right"
             handedness_list += [one_hot_map[opposite]] * 21
 
-        # Assign to two new columns
         handed_array = np.array(handedness_list)
         df["handedness_right"] = handed_array[:, 0]
         df["handedness_left"] = handed_array[:, 1]
 
-        return df
+        # --------- FLATTEN TO ONE ROW ----------
+        feature_cols = ["x", "y", "z", "handedness_right", "handedness_left"]
+        flat_features = df[feature_cols].values.flatten()  # shape (42*5,) or (21*5,)
+
+        # Return as a 1-row DataFrame
+        return pd.DataFrame([flat_features])  # In parse_hand_landmarks()
 
     def load_pose_from_files(self, file_name: str) -> int:
         pose = re.search(r"\./data/(\w+)/", file_name)
@@ -113,6 +162,7 @@ class DataFormattage:
         return df_all
 
 
-poses = ["hello", "thank_you", "i_love_you", "yes", "no", "please", "albania"]
-formattage = DataFormattage(poses=poses)
-df = formattage.all_metadata()
+# poses = ["hello", "thank_you", "i_love_you", "yes", "no", "please", "albania"]
+# formattage = DataFormattage(poses=poses)
+# df = formattage.all_metadata()
+# print(df.head(-5))

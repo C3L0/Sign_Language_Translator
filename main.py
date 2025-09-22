@@ -9,11 +9,12 @@ def main():
     print("Hello from sign-language-translator!")
 
     poses = ["hello", "thank_you", "i_love_you", "yes", "no", "please", "albania"]
+    poses = ["hello", "i_love_you", "yes", "no", "please"]
     formatter = DataFormattage(poses=poses, path="./data")
     df = formatter.all_metadata()
 
     input_dim = df.drop(columns=["pose"]).shape[1]
-    hidden_dim = 256
+    hidden_dim = 100
     num_classes = df["pose"].nunique()
 
     classifier = HandPoseClassifier(

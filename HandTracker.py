@@ -6,8 +6,9 @@ import torch
 from ModelTraining import HandPoseClassifier
 
 label_names = ["hello", "thank_you", "i_love_you", "yes", "no", "please", "albania"]
+label_names = ["hello", "i_love_you", "yes", "no", "please"]
 
-hidden_dim = 256
+hidden_dim = 100
 num_classes = len(label_names)
 
 input_dim = 210  # df.drop(columns=["pose"]).shape[1]

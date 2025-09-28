@@ -6,12 +6,12 @@ import torch
 from ModelTraining import HandPoseClassifier
 
 label_names = ["hello", "thank_you", "i_love_you", "yes", "no", "please", "albania"]
-label_names = ["hello", "i_love_you", "yes", "no", "please"]
+# label_names = ["hello", "i_love_you", "yes", "no", "please"]
 
 hidden_dim = 100
 num_classes = len(label_names)
 
-input_dim = 210  # df.drop(columns=["pose"]).shape[1]
+input_dim = 126  # 210  # df.drop(columns=["pose"]).shape[1]
 
 classifier = HandPoseClassifier(input_dim, hidden_dim, num_classes)
 classifier.model.load_state_dict(torch.load("model.pth"))
@@ -61,31 +61,40 @@ with mp_hands.Hands(
                     mp_drawing_styles.get_default_hand_landmarks_style(),
                     mp_drawing_styles.get_default_hand_connections_style(),
                 )
-
-                # Handedness one-hot per landmark
-                label = results.multi_handedness[i].classification[0].label
-                if label == "Right":
-                    handedness = np.tile([1, 0], (21, 1))  # shape (21, 2)
-                else:  # Left
-                    handedness = np.tile([0, 1], (21, 1))
-
                 # Landmark coordinates
                 coords = np.array(
                     [[lm.x, lm.y, lm.z] for lm in hand_landmarks.landmark]
                 )  # shape (21, 3)
 
-                # Combine coords + handedness → shape (21, 5)
-                features = np.hstack([coords, handedness])  # (21, 5)
-                all_features.append(features)
+                all_features.append(coords)
 
-            # If only one hand detected, pad with dummy hand (21x5 zeros)
+                #                 # Handedness one-hot per landmark
+                #                                 label = results.multi_handedness[i].classification[0].label
+                #                                 if label == "Right":
+                #                                     handedness = np.tile([1, 0], (21, 1))  # shape (21, 2)
+                #                                 else:  # Left
+                #                                     handedness = np.tile([0, 1], (21, 1))
+                #
+                #                 # Combine coords + handedness → shape (21, 5)
+                #                             features = np.hstack([coords, handedness])  # (21, 5)
+                #                             all_features.append(features)
+                #
+                #             # If only one hand detected, pad with dummy hand (21x5 zeros)
+                #             if len(all_features) == 1:
+                #                 all_features.append(np.zeros((21, 5)))
+                #
+                #             # Flatten all landmarks into a single row → shape (42*5=210)
+                #             full_input = np.concatenate(all_features).flatten()
+                #
+                #             # Convert to tensor
+                #             input_tensor = torch.tensor(full_input, dtype=torch.float32).unsqueeze(0)
             if len(all_features) == 1:
-                all_features.append(np.zeros((21, 5)))
+                all_features.append(np.full((21, 3), -1.0))
 
-            # Flatten all landmarks into a single row → shape (42*5=210)
+            # Concatenate into (42, 3) then flatten → (126,)
             full_input = np.concatenate(all_features).flatten()
 
-            # Convert to tensor
+            # Convert to tensor → (1, 126)
             input_tensor = torch.tensor(full_input, dtype=torch.float32).unsqueeze(0)
 
             # Predict

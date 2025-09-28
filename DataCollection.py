@@ -1,6 +1,7 @@
-import cv2
-import time
 import os
+import time
+
+import cv2
 
 
 # data folder should be clean
@@ -10,8 +11,8 @@ class DataCollector:
         self,
         pose_name: str,
         output_dir,
-        total_pictures=15,
-        break_time_sec=3,
+        total_pictures: int = 15,
+        break_time_sec: int = 3,
         camera_id=0,
     ):
         self.pose_name = pose_name
@@ -105,6 +106,7 @@ class DataCollector:
 
 
 poses = ["Hello", "Thank you", "I love you", "Yes", "No", "Please", "Albania"]
+poses = ["Hello", "I love you", "Yes", "No", "Please"]
 for pose in poses:
     name_dir = pose.replace(" ", "_").lower()
     output_dir = f"./data/{name_dir}/"
@@ -113,5 +115,5 @@ for pose in poses:
     os.makedirs(output_dir, exist_ok=True)
 
     # Create the DataCollector instance and capture
-    data = DataCollector(pose, output_dir)
+    data = DataCollector(pose, output_dir, total_pictures=30, break_time_sec=1)
     data.take_pictures_series()

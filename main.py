@@ -9,7 +9,7 @@ def main():
     print("Hello from sign-language-translator!")
 
     poses = ["hello", "thank_you", "i_love_you", "yes", "no", "please", "albania"]
-    poses = ["hello", "i_love_you", "yes", "no", "please"]
+    #     poses = ["hello", "i_love_you", "yes", "no", "please"]
     formatter = DataFormattage(poses=poses, path="./data")
     df = formatter.all_metadata()
 
